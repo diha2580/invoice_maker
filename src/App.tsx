@@ -1465,7 +1465,7 @@ export default function App() {
               </div>
               <div className="text-right flex flex-col justify-between items-end h-24">
                 <h2 className="text-4xl font-black tracking-tight">INVOICE</h2>
-                <div className="text-lg font-bold text-neutral-400">
+                <div className="text-lg font-black text-black">
                   {formatDate(data.date)}
                 </div>
               </div>
