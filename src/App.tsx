@@ -616,28 +616,32 @@ export default function App() {
     if (!invoiceRef.current) return;
     
     setIsExporting(true);
-    saveInvoiceToCloud();
+    await saveInvoiceToCloud();
     
     localStorage.removeItem(DRAFT_KEY);
     setHasDraft(false);
     
-    const element = invoiceRef.current;
-    const opt = {
-      margin: 0,
-      filename: `${data.customerName || 'Invoice'}.pdf`,
-      image: { type: 'jpeg' as const, quality: 1.0 },
-      html2canvas: { scale: 3, useCORS: true, letterRendering: true },
-      jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
-    };
+    // Slight delay to allow DOM to normalize (remove shadows/etc)
+    setTimeout(async () => {
+      const element = invoiceRef.current;
+      if (!element) return;
 
-    try {
-      // @ts-ignore - html2pdf might not be typed globally
-      await window.html2pdf().set(opt).from(element).save();
-    } catch (error) {
-      console.error('PDF generation error:', error);
-    } finally {
-      setIsExporting(false);
-    }
+      const opt = {
+        margin: 0,
+        filename: `${data.customerName || 'Invoice'}.pdf`,
+        image: { type: 'jpeg' as const, quality: 1.0 },
+        html2canvas: { scale: 3, useCORS: true, letterRendering: true },
+        jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
+      };
+
+      try {
+        await html2pdf().set(opt).from(element).save();
+      } catch (error) {
+        console.error('PDF generation error:', error);
+      } finally {
+        setIsExporting(false);
+      }
+    }, 500);
   };
 
   return (
