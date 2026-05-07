@@ -27,7 +27,10 @@ import {
   MapPin,
   CheckCircle2,
   ArrowLeftRight,
-  FileDown
+  FileDown,
+  Search,
+  ShieldCheck,
+  ShieldAlert
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 // @ts-ignore - html2pdf.js doesn't have standard types
@@ -38,6 +41,8 @@ interface InvoiceItem {
   description: string;
   price: number;
   qty: number;
+  warranty?: string;
+  serialNumber?: string;
 }
 
 interface Customer {
@@ -113,9 +118,11 @@ const INITIAL_DATA: InvoiceData = {
 export default function App() {
   const [data, setData] = useState<InvoiceData>(INITIAL_DATA);
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [viewMode, setViewMode] = useState<'edit' | 'preview' | 'customers'>('edit');
+  const [viewMode, setViewMode] = useState<'edit' | 'preview' | 'customers' | 'verify'>('edit');
   const [isExporting, setIsExporting] = useState(false);
   const [searchResults, setSearchResults] = useState<Customer[]>([]);
+  const [verifySerial, setVerifySerial] = useState('');
+  const [verifyResult, setVerifyResult] = useState<any>(null);
   const [showCustomerList, setShowCustomerList] = useState(false);
   const [newCustomer, setNewCustomer] = useState({ name: '', address: '', phone: '' });
   const [errors, setErrors] = useState<{ invoiceNumber?: string }>({});
@@ -281,6 +288,46 @@ export default function App() {
     setShowCustomerList(false);
   };
 
+  const verifyProductBySerial = async (serial: string) => {
+    if (!serial.trim() || !supabase) return;
+    
+    try {
+      const { data: results, error } = await supabase
+        .from('invoices')
+        .select('*');
+      
+      if (results && !error) {
+        // Search inside JSONB items
+        const match = results.find(inv => 
+          inv.items.some((item: any) => item.serialNumber?.toLowerCase().includes(serial.toLowerCase()))
+        );
+        
+        if (match) {
+          const item = match.items.find((i: any) => i.serialNumber?.toLowerCase().includes(serial.toLowerCase()));
+          setVerifyResult({ ...match, matchedItem: item });
+        } else {
+          setVerifyResult('NOT_FOUND');
+        }
+      }
+    } catch (e) {
+      console.error('Verification failed');
+    }
+  };
+
+  const saveInvoiceToCloud = async () => {
+    if (!supabase) return;
+    try {
+      await supabase.from('invoices').insert([{
+        invoice_number: data.invoiceNumber,
+        customer_name: data.customerName,
+        items: data.items,
+        total_amount: totals.total
+      }]);
+    } catch (e) {
+      console.error('Invoice sync failed');
+    }
+  };
+
   // Save business data when it changes
   useEffect(() => {
     const businessData = {
@@ -427,6 +474,7 @@ export default function App() {
     if (!validate()) return;
     setShowPrintConfirm(false);
     setIsPrinting(true);
+    saveInvoiceToCloud();
     setTimeout(() => {
       window.print();
       setIsPrinting(false);
@@ -438,6 +486,7 @@ export default function App() {
     if (!invoiceRef.current) return;
     
     setIsExporting(true);
+    saveInvoiceToCloud();
     
     const element = invoiceRef.current;
     const opt = {
@@ -521,6 +570,18 @@ export default function App() {
           </button>
 
           <button 
+            onClick={() => setViewMode('verify')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+              viewMode === 'verify' 
+                ? 'bg-primary text-white shadow-lg shadow-primary/20' 
+                : 'bg-white border border-neutral-200 text-neutral-600 hover:bg-neutral-50'
+            }`}
+          >
+            <ShieldCheck size={16} />
+            Verify
+          </button>
+
+          <button 
             onClick={() => setViewMode(prev => prev === 'preview' ? 'edit' : 'preview')}
             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
               viewMode === 'edit' || viewMode === 'customers'
@@ -568,7 +629,94 @@ export default function App() {
       </header>
 
       <main className="mt-24 mb-12 w-full max-w-6xl px-4 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Customers View */}
+        {/* Verify View */}
+        {viewMode === 'verify' && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="lg:col-span-12 max-w-2xl mx-auto w-full no-print"
+          >
+            <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl border border-neutral-100 font-sans">
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                  <ShieldCheck size={32} />
+                </div>
+                <h2 className="text-2xl font-black">Warranty Verification</h2>
+                <p className="text-neutral-500 text-sm">Check authenticity & warranty status of a product.</p>
+              </div>
+
+              <div className="flex gap-2 p-2 bg-neutral-100 rounded-2xl mb-8">
+                <input 
+                  type="text"
+                  value={verifySerial}
+                  onChange={e => setVerifySerial(e.target.value)}
+                  placeholder="Enter Serial Number..."
+                  className="flex-1 bg-transparent px-4 py-3 outline-none font-bold"
+                  onKeyDown={e => e.key === 'Enter' && verifyProductBySerial(verifySerial)}
+                />
+                <button 
+                  onClick={() => verifyProductBySerial(verifySerial)}
+                  className="px-6 py-3 bg-primary text-white rounded-xl font-black shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                >
+                  <Search size={18} /> Verify
+                </button>
+              </div>
+
+              {verifyResult === 'NOT_FOUND' && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-6 bg-red-50 rounded-2xl border border-red-100 text-center"
+                >
+                  <ShieldAlert className="mx-auto text-red-500 mb-2" size={32} />
+                  <h3 className="font-black text-red-900">Not Found</h3>
+                  <p className="text-red-700 text-xs">This serial number was never registered in our system.</p>
+                </motion.div>
+              )}
+
+              {verifyResult && verifyResult !== 'NOT_FOUND' && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-8 bg-green-50 rounded-2xl border border-green-100"
+                >
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-12 h-12 bg-green-500 text-white rounded-full flex items-center justify-center">
+                      <CheckCircle2 size={24} />
+                    </div>
+                    <div>
+                      <h3 className="font-black text-green-900 text-lg">Authentic Product</h3>
+                      <p className="text-green-700 text-xs italic">Verified on {new Date(verifyResult.created_at).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-[10px] font-bold text-green-600 uppercase">Product</p>
+                        <p className="font-black text-green-900">{verifyResult.matchedItem?.description}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-green-600 uppercase">Customer</p>
+                        <p className="font-black text-green-900">{verifyResult.customer_name}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 pt-4 border-t border-green-200">
+                      <div>
+                        <p className="text-[10px] font-bold text-green-600 uppercase">Serial Number</p>
+                        <p className="font-mono text-green-900 font-bold">{verifyResult.matchedItem?.serialNumber}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-green-600 uppercase">Warranty Info</p>
+                        <p className="font-black text-green-900">{verifyResult.matchedItem?.warranty || 'No info'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </div>
+          </motion.div>
+        )}
         {viewMode === 'customers' && (
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -955,6 +1103,23 @@ export default function App() {
                             />
                           </div>
                         </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <input 
+                            type="text" 
+                            value={item.serialNumber || ''}
+                            onChange={e => updateItem(item.id, 'serialNumber', e.target.value)}
+                            className="px-3 py-1.5 bg-white border border-neutral-200 rounded-lg outline-none text-[10px] font-bold text-primary italic"
+                            placeholder="Serial Number"
+                          />
+                          <input 
+                            type="text" 
+                            value={item.warranty || ''}
+                            onChange={e => updateItem(item.id, 'warranty', e.target.value)}
+                            className="px-3 py-1.5 bg-white border border-neutral-200 rounded-lg outline-none text-[10px] font-bold text-primary italic"
+                            placeholder="Warranty Info"
+                          />
+                        </div>
                       </motion.div>
                     ))}
                   </AnimatePresence>
@@ -1119,7 +1284,23 @@ export default function App() {
                         transition={{ duration: 0.2 }}
                       >
                         <td className="py-6 px-4 text-sm font-black text-center">{index + 1}</td>
-                        <td className="py-6 px-4 text-sm font-bold">{item.description}</td>
+                        <td className="py-6 px-4">
+                          <p className="text-sm font-bold uppercase">{item.description}</p>
+                          {(item.serialNumber || item.warranty) && (
+                            <div className="mt-1.5 flex gap-4">
+                              {item.serialNumber && (
+                                <p className="text-[10px] font-black text-primary flex items-center gap-1">
+                                  <Hash size={10} /> {item.serialNumber}
+                                </p>
+                              )}
+                              {item.warranty && (
+                                <p className="text-[10px] font-black text-neutral-500 border border-neutral-200 px-1.5 rounded flex items-center gap-1">
+                                  <ShieldCheck size={10} /> {item.warranty}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </td>
                         <td className="py-6 px-4 text-right text-sm font-black">{item.price.toLocaleString()}</td>
                         <td className="py-6 px-4 text-center text-sm font-black">{item.qty}</td>
                         <td className="py-6 px-4 text-right text-sm font-black">{ (item.price * item.qty).toLocaleString() }</td>
