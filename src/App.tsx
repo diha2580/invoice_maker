@@ -128,6 +128,8 @@ export default function App() {
   const [verifySerial, setVerifySerial] = useState('');
   const [verifyResult, setVerifyResult] = useState<any>(null);
   const [showCustomerList, setShowCustomerList] = useState(false);
+  const [showFilenameModal, setShowFilenameModal] = useState(false);
+  const [pdfFilename, setPdfFilename] = useState('');
   const [newCustomer, setNewCustomer] = useState({ name: '', address: '', phone: '' });
   const [errors, setErrors] = useState<{ general?: string }>({});
   const invoiceRef = useRef<HTMLDivElement>(null);
@@ -611,9 +613,15 @@ export default function App() {
     }, 700);
   };
 
-  const handleDownloadPDF = async () => {
+  const initiateDownloadPDF = () => {
     if (!validate()) return;
+    setPdfFilename(data.customerName || 'Invoice');
+    setShowFilenameModal(true);
+  };
+
+  const handleDownloadPDF = async () => {
     if (!invoiceRef.current) return;
+    setShowFilenameModal(false);
     
     setIsExporting(true);
     await saveInvoiceToCloud();
@@ -628,7 +636,7 @@ export default function App() {
 
       const opt = {
         margin: 0,
-        filename: `${data.customerName || 'Invoice'}.pdf`,
+        filename: `${pdfFilename.trim() || 'Invoice'}.pdf`,
         image: { type: 'jpeg' as const, quality: 1.0 },
         html2canvas: { scale: 3, useCORS: true, letterRendering: true },
         jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
@@ -675,6 +683,56 @@ export default function App() {
                   className="flex-1 py-3 text-sm font-black bg-primary text-white rounded-2xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
                 >
                   Yes, Print Now
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {showFilenameModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm no-print">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-neutral-200"
+            >
+              <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-6 mx-auto">
+                <Download size={32} />
+              </div>
+              <h3 className="text-xl font-black text-center mb-2">Save as PDF</h3>
+              <p className="text-neutral-500 text-center text-sm mb-6 leading-relaxed">
+                Enter a custom name for your invoice file.
+              </p>
+              
+              <div className="mb-8">
+                <label className="text-[10px] font-bold uppercase text-neutral-400 ml-1 mb-1 block">File Name</label>
+                <div className="relative">
+                  <input 
+                    autoFocus
+                    type="text" 
+                    value={pdfFilename}
+                    onChange={e => setPdfFilename(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleDownloadPDF()}
+                    placeholder="Enter filename..."
+                    className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-2xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm font-bold transition-all"
+                  />
+                  <div className="absolute right-4 top-1/3 text-neutral-400 text-xs font-bold">.pdf</div>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setShowFilenameModal(false)}
+                  className="flex-1 py-3 text-sm font-bold text-neutral-500 hover:bg-neutral-50 rounded-2xl transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleDownloadPDF}
+                  className="flex-1 py-3 text-sm font-black bg-blue-600 text-white rounded-2xl shadow-lg shadow-blue-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                >
+                  Save PDF
                 </button>
               </div>
             </motion.div>
@@ -747,7 +805,7 @@ export default function App() {
           </button>
           
           <button 
-            onClick={handleDownloadPDF}
+            onClick={initiateDownloadPDF}
             disabled={isExporting}
             className="flex items-center gap-2 px-5 py-2.5 bg-neutral-100 text-neutral-700 rounded-full text-sm font-black hover:bg-neutral-200 transition-all disabled:opacity-50"
           >
