@@ -1534,8 +1534,8 @@ export default function App() {
             {/* Info Section: Customer & Contacts */}
             <div className="grid grid-cols-2 gap-8 mb-10">
               <div className="space-y-3">
-                <div className="bg-black text-white px-4 py-1 flex justify-center">
-                  <p className="text-[10px] font-black uppercase tracking-widest">Invoice To :</p>
+                <div className="bg-black text-white px-4 h-7 flex items-center justify-center relative">
+                  <p className="text-[10px] font-black uppercase tracking-widest leading-none">Invoice To :</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-2xl font-black">{data.customerName}</p>
@@ -1544,31 +1544,31 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="space-y-3 flex flex-col items-end">
+              <div className="space-y-3 flex flex-col items-center">
                 <div className="space-y-3 w-fit">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full border-2 border-[#25D366] flex items-center justify-center text-[#25D366] bg-[#25D366]/5">
-                      <MessageCircle size={18} fill="currentColor" fillOpacity={0.1} />
+                    <div className="w-9 h-9 rounded-full border-2 border-[#25D366] flex items-center justify-center text-[#25D366] bg-[#25D366]/5 shrink-0">
+                      <MessageCircle size={16} fill="currentColor" fillOpacity={0.1} />
                     </div>
-                    <span className="text-sm font-bold text-neutral-800">{data.companyWhatsapp}</span>
+                    <span className="text-sm font-bold text-neutral-800 leading-none">{data.companyWhatsapp}</span>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full border-2 border-[#ea4335] flex items-center justify-center text-[#ea4335] bg-[#ea4335]/5">
-                      <Mail size={18} fill="currentColor" fillOpacity={0.1} />
+                    <div className="w-9 h-9 rounded-full border-2 border-[#ea4335] flex items-center justify-center text-[#ea4335] bg-[#ea4335]/5 shrink-0">
+                      <Mail size={16} fill="currentColor" fillOpacity={0.1} />
                     </div>
-                    <span className="text-sm font-bold text-neutral-800">{data.companyEmail}</span>
+                    <span className="text-sm font-bold text-neutral-800 leading-none">{data.companyEmail}</span>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full border-2 border-[#1877F2] flex items-center justify-center text-[#1877F2] bg-[#1877F2]/5">
-                      <Facebook size={18} fill="currentColor" fillOpacity={0.1} />
+                    <div className="w-9 h-9 rounded-full border-2 border-[#1877F2] flex items-center justify-center text-[#1877F2] bg-[#1877F2]/5 shrink-0">
+                      <Facebook size={16} fill="currentColor" fillOpacity={0.1} />
                     </div>
-                    <span className="text-lg font-bold text-neutral-800">{data.companyFacebook}</span>
+                    <span className="text-lg font-bold text-neutral-800 leading-none">{data.companyFacebook}</span>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full border-2 border-[#0ea5e9] flex items-center justify-center text-[#0ea5e9] bg-[#0ea5e9]/5">
-                      <Globe size={18} fill="currentColor" fillOpacity={0.1} />
+                    <div className="w-9 h-9 rounded-full border-2 border-[#0ea5e9] flex items-center justify-center text-[#0ea5e9] bg-[#0ea5e9]/5 shrink-0">
+                      <Globe size={16} fill="currentColor" fillOpacity={0.1} />
                     </div>
-                    <span className="text-sm font-bold text-neutral-800">{data.companyWebsite}</span>
+                    <span className="text-sm font-bold text-neutral-800 leading-none">{data.companyWebsite}</span>
                   </div>
                 </div>
               </div>
@@ -1579,11 +1579,11 @@ export default function App() {
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-[#F37321] text-white">
-                    <th className="py-2.5 px-4 text-center text-xs font-black uppercase tracking-wider border-r border-[#ffffff33]">No.</th>
-                    <th className="py-2.5 px-4 text-center text-xs font-black uppercase tracking-wider border-r border-[#ffffff33]">Description</th>
-                    <th className="py-2.5 px-4 text-center text-xs font-black uppercase tracking-wider border-r border-[#ffffff33]">Price</th>
-                    <th className="py-2.5 px-4 text-center text-xs font-black uppercase tracking-wider border-r border-[#ffffff33]">Qty</th>
-                    <th className="py-2.5 px-4 text-center text-xs font-black uppercase tracking-wider">Subtotal</th>
+                    <th className="h-10 px-4 text-center text-xs font-black uppercase tracking-wider border-r border-[#ffffff33] align-middle">No.</th>
+                    <th className="h-10 px-4 text-center text-xs font-black uppercase tracking-wider border-r border-[#ffffff33] align-middle">Description</th>
+                    <th className="h-10 px-4 text-center text-xs font-black uppercase tracking-wider border-r border-[#ffffff33] align-middle">Price</th>
+                    <th className="h-10 px-4 text-center text-xs font-black uppercase tracking-wider border-r border-[#ffffff33] align-middle">Qty</th>
+                    <th className="h-10 px-4 text-center text-xs font-black uppercase tracking-wider align-middle">Subtotal</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-100">
@@ -1628,12 +1628,12 @@ export default function App() {
                   initial={{ scale: 0.95 }}
                   animate={{ scale: 1 }}
                   transition={{ type: 'spring', stiffness: 300, damping: 15 }}
-                  className={`bg-[#F37321] text-white px-8 py-3 rounded-md flex justify-center items-center gap-10 transition-all ${
+                  className={`bg-[#F37321] text-white px-8 h-12 rounded-md flex justify-center items-center gap-10 transition-all ${
                     isExporting ? 'shadow-none' : 'shadow-lg'
                   }`}
                 >
-                  <span className="text-lg font-black uppercase tracking-widest">Total :</span>
-                  <span className="text-2xl font-black tracking-tight">{totals.total.toLocaleString()}</span>
+                  <span className="text-lg font-black uppercase tracking-widest leading-none">Total :</span>
+                  <span className="text-2xl font-black tracking-tight leading-none">{totals.total.toLocaleString()}</span>
                 </motion.div>
               </div>
             </div>
