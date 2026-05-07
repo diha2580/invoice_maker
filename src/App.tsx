@@ -368,6 +368,19 @@ export default function App() {
     }
   };
 
+  const formatDate = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-GB', { 
+        day: '2-digit', 
+        month: 'short', 
+        year: 'numeric'
+      });
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
   const loadFromHistory = (record: any) => {
     if (record.full_data) {
       setData(record.full_data);
@@ -780,7 +793,7 @@ export default function App() {
                           <td className="px-4 py-4">
                             <div className="flex items-center gap-2">
                               <Clock size={12} className="text-neutral-300" />
-                              <span className="text-xs text-neutral-600 font-medium">{new Date(record.created_at).toLocaleDateString()}</span>
+                              <span className="text-xs text-neutral-600 font-medium">{formatDate(record.created_at)}</span>
                             </div>
                           </td>
                           <td className="px-4 py-4 text-sm text-neutral-600 font-medium">{record.customer_name}</td>
@@ -870,7 +883,7 @@ export default function App() {
                     </div>
                     <div>
                       <h3 className="font-black text-green-900 text-lg">Authentic Product</h3>
-                      <p className="text-green-700 text-xs italic">Verified on {new Date(verifyResult.created_at).toLocaleDateString()}</p>
+                      <p className="text-green-700 text-xs italic">Verified on {formatDate(verifyResult.created_at)}</p>
                     </div>
                   </div>
 
@@ -1364,12 +1377,12 @@ export default function App() {
                 </h2>
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold uppercase text-neutral-500 ml-1">Date</label>
+                      <label className="text-[10px] font-bold uppercase text-neutral-500 ml-1">Issue Date</label>
                       <input 
                         type="date" 
                         value={data.date}
                         onChange={e => setData(prev => ({ ...prev, date: e.target.value }))}
-                        className="w-full px-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm"
+                        className="w-full px-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm transition-all"
                       />
                     </div>
                   </div>
@@ -1414,8 +1427,8 @@ export default function App() {
               </div>
               <div className="text-right flex flex-col justify-between items-end h-24">
                 <h2 className="text-4xl font-black tracking-tight">INVOICE</h2>
-                <div className="text-lg font-bold">
-                  Date: {new Date(data.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })}
+                <div className="text-lg font-bold text-neutral-400">
+                  {formatDate(data.date)}
                 </div>
               </div>
             </div>
@@ -1571,7 +1584,7 @@ export default function App() {
                       
                       {/* Date/Ref Stamp (Dynamic-ish looking) */}
                       <text x="50%" y="100%" dominantBaseline="middle" textAnchor="middle" className="text-[6px] font-bold fill-red-400 uppercase">
-                        DATE: {data.date}
+                        DATE: {formatDate(data.date)}
                       </text>
                     </svg>
 
