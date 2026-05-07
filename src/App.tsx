@@ -56,7 +56,6 @@ interface Customer {
 }
 
 interface InvoiceData {
-  invoiceNumber: string;
   serialNumber: string;
   date: string;
   dueDate: string;
@@ -85,7 +84,6 @@ const DEFAULT_ITEM: InvoiceItem = {
 };
 
 const INITIAL_DATA: InvoiceData = {
-  invoiceNumber: 'INV-2024-001',
   serialNumber: '1049127',
   date: new Date().toISOString().split('T')[0],
   dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -130,7 +128,7 @@ export default function App() {
   const [verifyResult, setVerifyResult] = useState<any>(null);
   const [showCustomerList, setShowCustomerList] = useState(false);
   const [newCustomer, setNewCustomer] = useState({ name: '', address: '', phone: '' });
-  const [errors, setErrors] = useState<{ invoiceNumber?: string }>({});
+  const [errors, setErrors] = useState<{ general?: string }>({});
   const invoiceRef = useRef<HTMLDivElement>(null);
   const customerSearchRef = useRef<HTMLDivElement>(null);
 
@@ -340,7 +338,6 @@ export default function App() {
     if (!supabase) return;
     try {
       await supabase.from('invoices').insert([{
-        invoice_number: data.invoiceNumber,
         customer_name: data.customerName,
         items: data.items,
         total_amount: totals.total,
@@ -487,17 +484,7 @@ export default function App() {
   ]);
 
   const validate = () => {
-    const newErrors: typeof errors = {};
-    const val = data.invoiceNumber.trim();
-    if (!val) {
-      newErrors.invoiceNumber = 'Invoice Number is required';
-    } else if (!/^[a-zA-Z0-9-_]+$/.test(val)) {
-      newErrors.invoiceNumber = 'Use only letters, numbers, - or _';
-    } else if (val.length < 3) {
-      newErrors.invoiceNumber = 'Identifier too short (min 3 chars)';
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return true;
   };
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -590,7 +577,7 @@ export default function App() {
     const element = invoiceRef.current;
     const opt = {
       margin: 0,
-      filename: `${data.invoiceNumber || 'Invoice'}.pdf`,
+      filename: `${data.customerName || 'Invoice'}.pdf`,
       image: { type: 'jpeg' as const, quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
@@ -773,7 +760,6 @@ export default function App() {
                   <thead>
                     <tr className="border-b border-neutral-100">
                       <th className="px-4 py-4 text-left text-[10px] font-black uppercase text-neutral-400 tracking-widest">Date</th>
-                      <th className="px-4 py-4 text-left text-[10px] font-black uppercase text-neutral-400 tracking-widest">Invoice #</th>
                       <th className="px-4 py-4 text-left text-[10px] font-black uppercase text-neutral-400 tracking-widest">Customer</th>
                       <th className="px-4 py-4 text-right text-[10px] font-black uppercase text-neutral-400 tracking-widest">Amount</th>
                       <th className="px-4 py-4 text-center text-[10px] font-black uppercase text-neutral-400 tracking-widest">Actions</th>
@@ -796,7 +782,6 @@ export default function App() {
                               <span className="text-xs text-neutral-600 font-medium">{new Date(record.created_at).toLocaleDateString()}</span>
                             </div>
                           </td>
-                          <td className="px-4 py-4 font-black text-neutral-900 text-sm">{record.invoice_number}</td>
                           <td className="px-4 py-4 text-sm text-neutral-600 font-medium">{record.customer_name}</td>
                           <td className="px-4 py-4 text-right font-black text-neutral-900 text-sm">
                             {(Number(record.total_amount) || 0).toLocaleString()}
@@ -1368,41 +1353,17 @@ export default function App() {
                 <h2 className="text-sm font-bold uppercase tracking-wider text-neutral-400 mb-4 flex items-center gap-2">
                   <Calendar size={14} /> Timeline & Details
                 </h2>
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold uppercase text-neutral-500 ml-1">Invoice #</label>
-                    <input 
-                      type="text" 
-                      value={data.invoiceNumber}
-                      onChange={e => {
-                        setData(prev => ({ ...prev, invoiceNumber: e.target.value }));
-                        if (errors.invoiceNumber) setErrors(prev => ({ ...prev, invoiceNumber: undefined }));
-                      }}
-                      className={`w-full px-4 py-2.5 bg-neutral-50 border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm transition-colors ${
-                        errors.invoiceNumber ? 'border-red-500 bg-red-50' : 'border-neutral-200'
-                      }`}
-                      placeholder="INV-001"
-                    />
-                    {errors.invoiceNumber && (
-                      <motion.p 
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="text-[10px] text-red-500 font-bold ml-1"
-                      >
-                        {errors.invoiceNumber}
-                      </motion.p>
-                    )}
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold uppercase text-neutral-500 ml-1">Date</label>
+                      <input 
+                        type="date" 
+                        value={data.date}
+                        onChange={e => setData(prev => ({ ...prev, date: e.target.value }))}
+                        className="w-full px-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm"
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold uppercase text-neutral-500 ml-1">Date</label>
-                    <input 
-                      type="date" 
-                      value={data.date}
-                      onChange={e => setData(prev => ({ ...prev, date: e.target.value }))}
-                      className="w-full px-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm"
-                    />
-                  </div>
-                </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold uppercase text-neutral-500 ml-1">Notes / Terms</label>
                   <textarea 
@@ -1557,11 +1518,8 @@ export default function App() {
               </div>
             </div>
 
-            {/* Middle Section: Invoice No & Stamp */}
-            <div className="mt-8 flex justify-between items-start">
-              <div>
-                <p className="text-lg font-black uppercase tracking-wider">INV NO; {data.invoiceNumber}</p>
-              </div>
+            {/* Middle Section: Stamp */}
+            <div className="mt-8 flex justify-end items-start">
               {data.isPaid && (
                 <motion.div 
                   initial={{ scale: 2, opacity: 0, rotate: 10, filter: 'blur(10px)' }}
@@ -1599,12 +1557,12 @@ export default function App() {
 
                       {/* Bottom Footer Text */}
                       <text x="50%" y="88%" dominantBaseline="middle" textAnchor="middle" className="text-[8px] font-black fill-red-600/90 uppercase tracking-widest">
-                        Infinity Tech
+                        {data.companyName}
                       </text>
                       
                       {/* Date/Ref Stamp (Dynamic-ish looking) */}
                       <text x="50%" y="100%" dominantBaseline="middle" textAnchor="middle" className="text-[6px] font-bold fill-red-400 uppercase">
-                        Ref: {data.invoiceNumber || 'TX-99'}
+                        DATE: {data.date}
                       </text>
                     </svg>
 
