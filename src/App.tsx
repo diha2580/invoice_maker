@@ -573,18 +573,41 @@ export default function App() {
   const handlePrint = () => {
     if (!validate()) return;
     setShowPrintConfirm(false);
-    setIsPrinting(true);
-    setViewMode('preview'); // Ensure we are in preview mode for printing
+    
+    // Add dynamic print styles for perfect A4 page fit
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @media print {
+        @page { size: A4; margin: 0; }
+        body { margin: 0; border: none; background: white; }
+        .no-print { display: none !important; }
+        .invoice-container { 
+          width: 210mm !important; 
+          height: 297mm !important; 
+          min-height: 297mm !important;
+          margin: 0 !important; 
+          padding: 15mm !important; 
+          box-shadow: none !important; 
+          border: none !important;
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          border-radius: 0 !important;
+          transform: none !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+
+    setViewMode('preview');
     saveInvoiceToCloud();
     
-    // Clear draft on successful completion
     localStorage.removeItem(DRAFT_KEY);
     setHasDraft(false);
     
-    // Slight delay to allow the preview layout to render fully before printing
     setTimeout(() => {
       window.print();
-      setIsPrinting(false);
+      document.head.removeChild(style);
     }, 700);
   };
 
@@ -595,7 +618,6 @@ export default function App() {
     setIsExporting(true);
     saveInvoiceToCloud();
     
-    // Clear draft on successful completion
     localStorage.removeItem(DRAFT_KEY);
     setHasDraft(false);
     
@@ -603,13 +625,14 @@ export default function App() {
     const opt = {
       margin: 0,
       filename: `${data.customerName || 'Invoice'}.pdf`,
-      image: { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
+      image: { type: 'jpeg' as const, quality: 1.0 },
+      html2canvas: { scale: 3, useCORS: true, letterRendering: true },
       jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
     };
 
     try {
-      await html2pdf().set(opt).from(element).save();
+      // @ts-ignore - html2pdf might not be typed globally
+      await window.html2pdf().set(opt).from(element).save();
     } catch (error) {
       console.error('PDF generation error:', error);
     } finally {
@@ -754,7 +777,7 @@ export default function App() {
         </div>
       </header>
 
-      <main className="mt-24 mb-12 w-full max-w-6xl px-4 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <main className="mt-24 mb-12 w-full max-w-7xl px-4 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mx-auto place-items-center">
         {/* History View */}
         {viewMode === 'history' && (
           <motion.div 
@@ -1410,10 +1433,10 @@ export default function App() {
           )}
         </AnimatePresence>
 
-        <div className={`${viewMode === 'preview' ? 'lg:col-span-12' : 'lg:col-span-7'} transition-all duration-500 w-full flex justify-center`}>
-          <div ref={invoiceRef} className={`invoice-container w-full bg-white rounded-sm max-w-[210mm] min-h-[297mm] p-12 md:p-14 flex flex-col font-sans relative overflow-hidden text-black transition-all ${
+        <div className={`${viewMode === 'preview' ? 'lg:col-span-12' : 'lg:col-span-12 xl:col-span-7'} transition-all duration-500 w-full flex justify-center`}>
+          <div ref={invoiceRef} className={`invoice-container w-full bg-white rounded-none border border-neutral-100 max-w-[210mm] min-h-[297mm] p-12 md:p-14 flex flex-col font-sans relative overflow-hidden text-black transition-all ${
             isExporting ? 'shadow-none' : 'shadow-2xl'
-          }`}>
+          }`} style={{ width: '210mm', height: '297mm' }}>
             
             {/* Header: Logo, Name, Slogan & Title, Date */}
             <div className="flex justify-between items-start mb-4 relative pb-4">
