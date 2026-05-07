@@ -19,6 +19,7 @@ import {
   Phone, 
   Globe, 
   Facebook, 
+  MessageCircle,
   MessageSquare,
   Building2,
   Calendar,
@@ -1081,42 +1082,50 @@ export default function App() {
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold uppercase text-neutral-500 ml-1">WhatsApp</label>
+                      <label className="text-[10px] font-bold uppercase text-neutral-500 ml-1 flex items-center gap-1">
+                        <MessageCircle size={10} className="text-[#25D366]" /> WhatsApp
+                      </label>
                       <input 
                         type="text" 
                         value={data.companyWhatsapp}
                         onChange={e => setData(prev => ({ ...prev, companyWhatsapp: e.target.value }))}
-                        className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-sm"
+                        className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-sm focus:ring-2 focus:ring-[#25D366]/20 focus:border-[#25D366] outline-none"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold uppercase text-neutral-500 ml-1">Email</label>
+                      <label className="text-[10px] font-bold uppercase text-neutral-500 ml-1 flex items-center gap-1">
+                        <Mail size={10} className="text-[#ea4335]" /> Email
+                      </label>
                       <input 
                         type="text" 
                         value={data.companyEmail}
                         onChange={e => setData(prev => ({ ...prev, companyEmail: e.target.value }))}
-                        className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-sm"
+                        className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-sm focus:ring-2 focus:ring-[#ea4335]/20 focus:border-[#ea4335] outline-none"
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold uppercase text-neutral-500 ml-1">Facebook</label>
+                      <label className="text-[10px] font-bold uppercase text-neutral-500 ml-1 flex items-center gap-1">
+                        <Facebook size={10} className="text-[#1877F2]" /> Facebook
+                      </label>
                       <input 
                         type="text" 
                         value={data.companyFacebook}
                         onChange={e => setData(prev => ({ ...prev, companyFacebook: e.target.value }))}
-                        className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-sm"
+                        className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-sm focus:ring-2 focus:ring-[#1877F2]/20 focus:border-[#1877F2] outline-none"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold uppercase text-neutral-500 ml-1">Website</label>
+                      <label className="text-[10px] font-bold uppercase text-neutral-500 ml-1 flex items-center gap-1">
+                        <Globe size={10} className="text-[#0ea5e9]" /> Website
+                      </label>
                       <input 
                         type="text" 
                         value={data.companyWebsite}
                         onChange={e => setData(prev => ({ ...prev, companyWebsite: e.target.value }))}
-                        className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-sm"
+                        className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0ea5e9]/20 focus:border-[#0ea5e9] outline-none"
                       />
                     </div>
                   </div>
@@ -1427,28 +1436,28 @@ export default function App() {
               <div className="space-y-3 flex flex-col items-end">
                 <div className="space-y-3 w-fit">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full border-2 border-black flex items-center justify-center">
-                      <MessageSquare size={18} />
+                    <div className="w-10 h-10 rounded-full border-2 border-[#25D366] flex items-center justify-center text-[#25D366] bg-[#25D366]/5">
+                      <MessageCircle size={18} fill="currentColor" fillOpacity={0.1} />
                     </div>
-                    <span className="text-sm font-bold">{data.companyWhatsapp}</span>
+                    <span className="text-sm font-bold text-neutral-800">{data.companyWhatsapp}</span>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full border-2 border-black flex items-center justify-center">
-                      <Mail size={18} />
+                    <div className="w-10 h-10 rounded-full border-2 border-[#ea4335] flex items-center justify-center text-[#ea4335] bg-[#ea4335]/5">
+                      <Mail size={18} fill="currentColor" fillOpacity={0.1} />
                     </div>
-                    <span className="text-sm font-bold">{data.companyEmail}</span>
+                    <span className="text-sm font-bold text-neutral-800">{data.companyEmail}</span>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full border-2 border-black flex items-center justify-center">
-                      <Facebook size={18} />
+                    <div className="w-10 h-10 rounded-full border-2 border-[#1877F2] flex items-center justify-center text-[#1877F2] bg-[#1877F2]/5">
+                      <Facebook size={18} fill="currentColor" fillOpacity={0.1} />
                     </div>
-                    <span className="text-lg font-bold">{data.companyFacebook}</span>
+                    <span className="text-lg font-bold text-neutral-800">{data.companyFacebook}</span>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full border-2 border-black flex items-center justify-center">
-                      <Globe size={18} />
+                    <div className="w-10 h-10 rounded-full border-2 border-[#0ea5e9] flex items-center justify-center text-[#0ea5e9] bg-[#0ea5e9]/5">
+                      <Globe size={18} fill="currentColor" fillOpacity={0.1} />
                     </div>
-                    <span className="text-sm font-bold">{data.companyWebsite}</span>
+                    <span className="text-sm font-bold text-neutral-800">{data.companyWebsite}</span>
                   </div>
                 </div>
               </div>
