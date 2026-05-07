@@ -137,10 +137,27 @@ export default function App() {
   // Persistence Key
   const STORAGE_KEY = 'swift_invoice_business_data';
   const CUSTOMERS_KEY = 'swift_invoice_customers';
+  const DRAFT_KEY = 'swift_invoice_draft';
 
-  // Load persisted business data on mount
+  const [hasDraft, setHasDraft] = useState(false);
+
+  // Load persisted business data and drafts on mount
   useEffect(() => {
+    const checkDraft = () => {
+      const draft = localStorage.getItem(DRAFT_KEY);
+      if (draft) {
+        try {
+          const parsed = JSON.parse(draft);
+          // Only show restore if draft is different from current data and has some content
+          if (parsed.customerName !== INITIAL_DATA.customerName || parsed.items.length > 1) {
+            setHasDraft(true);
+          }
+        } catch (e) {}
+      }
+    };
+    
     const loadData = async () => {
+      checkDraft();
       // Priority 1: Supabase
       if (supabase) {
         try {
@@ -357,6 +374,21 @@ export default function App() {
     if (record.full_data) {
       setData(record.full_data);
       setViewMode('edit');
+      // Clear draft since we just loaded a specific history item
+      localStorage.removeItem(DRAFT_KEY);
+      setHasDraft(false);
+    }
+  };
+
+  const handleRestoreDraft = () => {
+    const draft = localStorage.getItem(DRAFT_KEY);
+    if (draft) {
+      try {
+        setData(JSON.parse(draft));
+        setHasDraft(false);
+      } catch (e) {
+        console.error('Failed to restore draft');
+      }
     }
   };
 
@@ -375,6 +407,14 @@ export default function App() {
       console.error('Failed to delete history item');
     }
   };
+
+  // Auto-save draft whenever anything changes (Debounced)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [data]);
 
   // Save business data when it changes
   useEffect(() => {
@@ -525,6 +565,10 @@ export default function App() {
     setViewMode('preview'); // Ensure we are in preview mode for printing
     saveInvoiceToCloud();
     
+    // Clear draft on successful completion
+    localStorage.removeItem(DRAFT_KEY);
+    setHasDraft(false);
+    
     // Slight delay to allow the preview layout to render fully before printing
     setTimeout(() => {
       window.print();
@@ -538,6 +582,10 @@ export default function App() {
     
     setIsExporting(true);
     saveInvoiceToCloud();
+    
+    // Clear draft on successful completion
+    localStorage.removeItem(DRAFT_KEY);
+    setHasDraft(false);
     
     const element = invoiceRef.current;
     const opt = {
@@ -978,6 +1026,40 @@ export default function App() {
               exit="hidden"
               className="lg:col-span-12 xl:col-span-5 flex flex-col gap-6 no-print"
             >
+              {hasDraft && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-primary/5 border border-primary/20 p-5 rounded-3xl flex items-center justify-between gap-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+                      <Clock size={20} />
+                    </div>
+                    <div>
+                      <p className="text-xs font-black text-primary">Unsaved Draft Detected</p>
+                      <p className="text-[10px] text-primary/60 font-medium">You have an invoice from a previous session.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => {
+                        localStorage.removeItem(DRAFT_KEY);
+                        setHasDraft(false);
+                      }}
+                      className="px-4 py-2 text-[10px] font-bold text-neutral-400 hover:text-neutral-600 transition-colors"
+                    >
+                      Discard
+                    </button>
+                    <button 
+                      onClick={handleRestoreDraft}
+                      className="px-5 py-2 bg-primary text-white text-[10px] font-black rounded-xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+                    >
+                      Restore Data
+                    </button>
+                  </div>
+                </motion.div>
+              )}
               <motion.section 
                 variants={{
                   hidden: { opacity: 0, y: 20 },
