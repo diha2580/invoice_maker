@@ -370,6 +370,17 @@ export default function App() {
 
   const formatDate = (dateStr: string) => {
     try {
+      // If it's a simple date string (YYYY-MM-DD), parse it as local time to avoid TZ shifts
+      if (dateStr.length === 10 && dateStr.includes('-')) {
+        const [year, month, day] = dateStr.split('-').map(Number);
+        const date = new Date(year, month - 1, day);
+        return date.toLocaleDateString('en-GB', { 
+          day: '2-digit', 
+          month: 'short', 
+          year: 'numeric'
+        });
+      }
+      
       const date = new Date(dateStr);
       return date.toLocaleDateString('en-GB', { 
         day: '2-digit', 
