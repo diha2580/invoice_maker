@@ -93,8 +93,17 @@ CREATE TABLE IF NOT EXISTS invoices (
     customer_name TEXT,
     items JSONB, 
     total_amount DECIMAL,
+    full_data JSONB, -- Stores the complete InvoiceData object for restoration
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Update invoices table if it already exists without full_data
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='invoices' AND column_name='full_data') THEN
+        ALTER TABLE invoices ADD COLUMN full_data JSONB;
+    END IF;
+END $$;
 
 -- Enable RLS
 ALTER TABLE customers ENABLE ROW LEVEL SECURITY;

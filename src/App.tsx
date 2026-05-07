@@ -30,7 +30,10 @@ import {
   FileDown,
   Search,
   ShieldCheck,
-  ShieldAlert
+  ShieldAlert,
+  History,
+  Clock,
+  RotateCw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 // @ts-ignore - html2pdf.js doesn't have standard types
@@ -118,9 +121,11 @@ const INITIAL_DATA: InvoiceData = {
 export default function App() {
   const [data, setData] = useState<InvoiceData>(INITIAL_DATA);
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [viewMode, setViewMode] = useState<'edit' | 'preview' | 'customers' | 'verify'>('edit');
+  const [viewMode, setViewMode] = useState<'edit' | 'preview' | 'customers' | 'verify' | 'history'>('edit');
   const [isExporting, setIsExporting] = useState(false);
   const [searchResults, setSearchResults] = useState<Customer[]>([]);
+  const [history, setHistory] = useState<any[]>([]);
+  const [isFetchingHistory, setIsFetchingHistory] = useState(false);
   const [verifySerial, setVerifySerial] = useState('');
   const [verifyResult, setVerifyResult] = useState<any>(null);
   const [showCustomerList, setShowCustomerList] = useState(false);
@@ -321,10 +326,53 @@ export default function App() {
         invoice_number: data.invoiceNumber,
         customer_name: data.customerName,
         items: data.items,
-        total_amount: totals.total
+        total_amount: totals.total,
+        full_data: data
       }]);
     } catch (e) {
       console.error('Invoice sync failed');
+    }
+  };
+
+  const fetchHistory = async () => {
+    if (!supabase) return;
+    setIsFetchingHistory(true);
+    try {
+      const { data: results, error } = await supabase
+        .from('invoices')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (results && !error) {
+        setHistory(results);
+      }
+    } catch (e) {
+      console.error('Failed to fetch history');
+    } finally {
+      setIsFetchingHistory(false);
+    }
+  };
+
+  const loadFromHistory = (record: any) => {
+    if (record.full_data) {
+      setData(record.full_data);
+      setViewMode('edit');
+    }
+  };
+
+  const deleteFromHistory = async (id: string) => {
+    if (!supabase) return;
+    try {
+      const { error } = await supabase
+        .from('invoices')
+        .delete()
+        .eq('id', id);
+      
+      if (!error) {
+        setHistory(prev => prev.filter(item => item.id !== id));
+      }
+    } catch (e) {
+      console.error('Failed to delete history item');
     }
   };
 
@@ -474,11 +522,14 @@ export default function App() {
     if (!validate()) return;
     setShowPrintConfirm(false);
     setIsPrinting(true);
+    setViewMode('preview'); // Ensure we are in preview mode for printing
     saveInvoiceToCloud();
+    
+    // Slight delay to allow the preview layout to render fully before printing
     setTimeout(() => {
       window.print();
       setIsPrinting(false);
-    }, 500);
+    }, 700);
   };
 
   const handleDownloadPDF = async () => {
@@ -570,6 +621,21 @@ export default function App() {
           </button>
 
           <button 
+            onClick={() => {
+              setViewMode('history');
+              fetchHistory();
+            }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+              viewMode === 'history' 
+                ? 'bg-primary text-white shadow-lg shadow-primary/20' 
+                : 'bg-white border border-neutral-200 text-neutral-600 hover:bg-neutral-50'
+            }`}
+          >
+            <History size={16} />
+            History
+          </button>
+
+          <button 
             onClick={() => setViewMode('verify')}
             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
               viewMode === 'verify' 
@@ -629,6 +695,90 @@ export default function App() {
       </header>
 
       <main className="mt-24 mb-12 w-full max-w-6xl px-4 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* History View */}
+        {viewMode === 'history' && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="lg:col-span-12 space-y-8 no-print"
+          >
+            <div className="bg-white p-8 rounded-[2rem] shadow-xl border border-neutral-100 max-w-5xl mx-auto">
+              <div className="flex justify-between items-center mb-8">
+                <div>
+                  <h2 className="text-2xl font-black">Invoice History</h2>
+                  <p className="text-neutral-500 text-sm">View and restore previous invoices.</p>
+                </div>
+                <button 
+                  onClick={fetchHistory}
+                  disabled={isFetchingHistory}
+                  className="p-2 text-neutral-400 hover:text-primary transition-colors hover:bg-neutral-50 rounded-full"
+                  title="Refresh"
+                >
+                  <motion.div animate={isFetchingHistory ? { rotate: 360 } : {}} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
+                    <RotateCw size={18} />
+                  </motion.div>
+                </button>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-neutral-100">
+                      <th className="px-4 py-4 text-left text-[10px] font-black uppercase text-neutral-400 tracking-widest">Date</th>
+                      <th className="px-4 py-4 text-left text-[10px] font-black uppercase text-neutral-400 tracking-widest">Invoice #</th>
+                      <th className="px-4 py-4 text-left text-[10px] font-black uppercase text-neutral-400 tracking-widest">Customer</th>
+                      <th className="px-4 py-4 text-right text-[10px] font-black uppercase text-neutral-400 tracking-widest">Amount</th>
+                      <th className="px-4 py-4 text-center text-[10px] font-black uppercase text-neutral-400 tracking-widest">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {history.length === 0 && !isFetchingHistory ? (
+                      <tr>
+                        <td colSpan={5} className="py-12 text-center text-neutral-400">
+                          <History size={48} className="mx-auto mb-4 opacity-10" />
+                          <p>No history found.</p>
+                        </td>
+                      </tr>
+                    ) : (
+                      history.map((record) => (
+                        <tr key={record.id} className="group border-b border-neutral-50 hover:bg-neutral-50/50 transition-colors">
+                          <td className="px-4 py-4">
+                            <div className="flex items-center gap-2">
+                              <Clock size={12} className="text-neutral-300" />
+                              <span className="text-xs text-neutral-600 font-medium">{new Date(record.created_at).toLocaleDateString()}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 font-black text-neutral-900 text-sm">{record.invoice_number}</td>
+                          <td className="px-4 py-4 text-sm text-neutral-600 font-medium">{record.customer_name}</td>
+                          <td className="px-4 py-4 text-right font-black text-neutral-900 text-sm">
+                            {(Number(record.total_amount) || 0).toLocaleString()}
+                          </td>
+                          <td className="px-4 py-4">
+                            <div className="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button 
+                                onClick={() => loadFromHistory(record)}
+                                className="px-3 py-1.5 bg-primary/10 text-primary text-[10px] font-bold rounded-lg hover:bg-primary/20 transition-colors"
+                              >
+                                Restore
+                              </button>
+                              <button 
+                                onClick={() => deleteFromHistory(record.id)}
+                                className="p-1.5 text-neutral-300 hover:text-red-500 transition-colors"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Verify View */}
         {viewMode === 'verify' && (
           <motion.div 
