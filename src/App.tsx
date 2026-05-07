@@ -1476,7 +1476,9 @@ export default function App() {
             {/* Info Section: Customer & Contacts */}
             <div className="grid grid-cols-2 gap-8 mb-10">
               <div className="space-y-3">
-                <p className="text-[10px] font-black uppercase tracking-widest bg-black text-white inline-block px-2 py-0.5">Invoice To :</p>
+                <div className="bg-black text-white px-4 py-1 flex justify-center">
+                  <p className="text-[10px] font-black uppercase tracking-widest">Invoice To :</p>
+                </div>
                 <div className="space-y-1">
                   <p className="text-2xl font-black">{data.customerName}</p>
                   <p className="text-lg font-bold">{data.customerPhone}</p>
@@ -1519,11 +1521,11 @@ export default function App() {
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-[#F37321] text-white">
-                    <th className="py-2.5 px-4 text-left text-xs font-black uppercase tracking-wider border-r border-[#ffffff33]">No.</th>
-                    <th className="py-2.5 px-4 text-left text-xs font-black uppercase tracking-wider border-r border-[#ffffff33]">Description</th>
-                    <th className="py-2.5 px-4 text-right text-xs font-black uppercase tracking-wider border-r border-[#ffffff33]">Price</th>
+                    <th className="py-2.5 px-4 text-center text-xs font-black uppercase tracking-wider border-r border-[#ffffff33]">No.</th>
+                    <th className="py-2.5 px-4 text-center text-xs font-black uppercase tracking-wider border-r border-[#ffffff33]">Description</th>
+                    <th className="py-2.5 px-4 text-center text-xs font-black uppercase tracking-wider border-r border-[#ffffff33]">Price</th>
                     <th className="py-2.5 px-4 text-center text-xs font-black uppercase tracking-wider border-r border-[#ffffff33]">Qty</th>
-                    <th className="py-2.5 px-4 text-right text-xs font-black uppercase tracking-wider">Subtotal</th>
+                    <th className="py-2.5 px-4 text-center text-xs font-black uppercase tracking-wider">Subtotal</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-100">
@@ -1568,12 +1570,12 @@ export default function App() {
                   initial={{ scale: 0.95 }}
                   animate={{ scale: 1 }}
                   transition={{ type: 'spring', stiffness: 300, damping: 15 }}
-                  className={`bg-[#F37321] text-white px-8 py-2 rounded-sm flex gap-6 items-center transition-all ${
+                  className={`bg-[#F37321] text-white px-8 py-3 rounded-md flex justify-center items-center gap-10 transition-all ${
                     isExporting ? 'shadow-none' : 'shadow-lg'
                   }`}
                 >
                   <span className="text-lg font-black uppercase tracking-widest">Total :</span>
-                  <span className="text-xl font-black">{totals.total.toLocaleString()}</span>
+                  <span className="text-2xl font-black tracking-tight">{totals.total.toLocaleString()}</span>
                 </motion.div>
               </div>
             </div>
